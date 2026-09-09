@@ -1,0 +1,35 @@
+meta {
+  name: /admin/packages update
+  type: http
+  seq: 11
+}
+
+post {
+  url: http://localhost:8080/admin/packages
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbl9pZCI6MSwidXNlcm5hbWUiOiJhZG1pbiIsInN1YiI6IjEiLCJleHAiOjE3ODkwNDI4NTgsImlhdCI6MTc4ODk1NjQ1OH0.pIbzXpw3ijynV2YSg6QKzbOTQzjl1HmwdxQIlLrB5Bk
+}
+
+body:json {
+  {
+    "name": "Premium Wedding Package",
+    "description": "Complete premium wedding package",
+    "price": 1500,
+    "items": [
+      "Decoration",
+      "Photography",
+      "DJ",
+      "Venue Coordination"
+    ],
+    "savings": "Save 20% compared to individual services"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

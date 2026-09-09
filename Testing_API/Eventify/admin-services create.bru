@@ -1,0 +1,28 @@
+meta {
+  name: /admin/services create
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://localhost:8080/admin/services
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbl9pZCI6MSwidXNlcm5hbWUiOiJhZG1pbiIsInN1YiI6IjEiLCJleHAiOjE3ODkwNDI4NTgsImlhdCI6MTc4ODk1NjQ1OH0.pIbzXpw3ijynV2YSg6QKzbOTQzjl1HmwdxQIlLrB5Bk
+}
+
+body:json {
+  {
+    "name": "Wedding Planning",
+    "description": "Complete wedding planning service",
+    "price": 500
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

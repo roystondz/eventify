@@ -1,0 +1,23 @@
+meta {
+  name: /admin/test validate admin entry
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8080/admin/login
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "username":"admin",
+    "password":"Admin@123"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
