@@ -5,7 +5,7 @@ import FeaturedPackages from '../components/home/FeaturedPackages';
 import ServicesGrid from '../components/home/ServicesGrid';
 import EventCalculator from '../components/home/EventCalculator';
 import GalleryShowcase from '../components/home/GalleryShowcase';
-import Testimonials from '../components/home/Testimonials';
+
 
 export default function HomePage() {
   return (
@@ -16,7 +16,7 @@ export default function HomePage() {
       <ServicesGrid limit={4} />
       <EventCalculator />
       <GalleryShowcase isFullPage={false} />
-      <Testimonials />
+
     </div>
   );
 }

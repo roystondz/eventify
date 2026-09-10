@@ -34,7 +34,7 @@ export default function Footer() {
               />
             </Link>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', lineHeight: '1.7', marginBottom: '1.5rem' }}>
-              Elevate Every Moment. We architect bespoke, luxury experiential events, breathtaking stages, cutting-edge audiovisuals, and unforgettable memories.
+              Elevate Every Moment. We architect Fully Personalized, luxury experiential events, breathtaking stages, cutting-edge audiovisuals, and unforgettable memories.
             </p>
             <div style={{ display: 'flex', gap: '0.75rem' }}>
               <a
@@ -74,7 +74,7 @@ export default function Footer() {
                 { label: 'Event Services', path: '/services' },
                 { label: 'Custom Event Builder', path: '/calculator' },
                 { label: 'Photo & Video Gallery', path: '/gallery' },
-                { label: 'Concierge & Booking', path: '/contact' },
+                { label: 'Contact Us & Booking', path: '/contact' },
               ].map((item) => (
                 <li key={item.label}>
                   <Link
@@ -114,16 +114,16 @@ export default function Footer() {
           {/* Contact Concierge */}
           <div>
             <h4 className="font-bebas" style={{ fontSize: '1.25rem', letterSpacing: '0.08em', color: 'var(--light-champagne)', marginBottom: '1.25rem' }}>
-              Concierge Contact
+              Contact Us
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
                 <MapPin size={18} color="var(--gold-accent)" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span>100 Luxury Boulevard, Suite 500, Beverly Hills, CA</span>
+                <span>Kuwait</span>
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                 <Phone size={18} color="var(--gold-accent)" style={{ flexShrink: 0 }} />
-                <span>+1 (800) 555-EVENT (3836)</span>
+                <span>WhatsApp / Contact: +965 6643 3680</span>
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                 <Mail size={18} color="var(--gold-accent)" style={{ flexShrink: 0 }} />

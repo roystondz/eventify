@@ -6,7 +6,7 @@ const GALLERY_ITEMS = [
   { id: 1, title: 'Grand Royal Stage & Chandelier Canopy', category: 'Weddings', img: '/assets/banners/1.png' },
   { id: 2, title: 'Intimate Candlelit Dining Experience', category: 'Private Dinners', img: '/assets/banners/2.png' },
   { id: 3, title: 'Neon Themed DJ Stage & Club Lighting', category: 'Parties', img: '/assets/banners/3.png' },
-  { id: 4, title: 'Bespoke Floral Arch & Gold Staging', category: 'Weddings', img: '/assets/banners/4.png' },
+  { id: 4, title: 'Fully Personalized Floral Arch & Gold Staging', category: 'Weddings', img: '/assets/banners/4.png' },
   { id: 5, title: 'Architectural Uplighting & Banquet Setup', category: 'Galas', img: '/assets/banners/5.png' },
   { id: 6, title: 'Ultra-Wide Curved LED Screen Production', category: 'Corporate', img: '/assets/banners/6.png' },
   { id: 7, title: 'Fairytale Entrance Tunnel & Cold Sparks', category: 'Weddings', img: '/assets/banners/7.png' },
@@ -39,7 +39,7 @@ export default function GalleryShowcase({ isFullPage = false }) {
             OUR <span className="text-pink-gradient">MASTERPIECE PRODUCTIONS</span>
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '1.05rem', lineHeight: '1.6' }}>
-            Immerse yourself in our portfolio of spellbinding atmospheres, bespoke floral architectural works, and concert-grade stages.
+            Immerse yourself in our portfolio of spellbinding atmospheres, Fully Personalized floral architectural works, and concert-grade stages.
           </p>
 
           {/* Filter Pills */}
@@ -98,7 +98,7 @@ export default function GalleryShowcase({ isFullPage = false }) {
             >
               <img
                 src={item.img}
-                alt={item.title}
+                alt={item.category}
                 style={{
                   width: '100%',
                   height: '100%',
@@ -122,7 +122,7 @@ export default function GalleryShowcase({ isFullPage = false }) {
                 <span className="badge badge-gold" style={{ alignSelf: 'flex-start', marginBottom: '0.4rem', fontSize: '0.72rem' }}>
                   {item.category}
                 </span>
-                <h4
+                {/* <h4
                   className="font-bebas"
                   style={{
                     fontSize: '1.4rem',
@@ -135,7 +135,7 @@ export default function GalleryShowcase({ isFullPage = false }) {
                 >
                   <span>{item.title}</span>
                   <Eye size={18} color="var(--button-highlight)" />
-                </h4>
+                </h4> */}
               </div>
             </div>
           ))}

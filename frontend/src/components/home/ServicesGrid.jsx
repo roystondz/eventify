@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, Plus, Check, ArrowRight } from 'lucide-react';
@@ -22,20 +23,49 @@ export default function ServicesGrid({ limit = null }) {
 
   const displayServices = limit ? services.slice(0, limit) : services;
 
-  // Map service item to corresponding image
-  const getServiceImage = (service) => {
-    if (service.image) return service.image;
-    const name = (service.name || '').toLowerCase();
-    if (name.includes('sound') || name.includes('dj')) return '/assets/services/dj and sound system.png';
-    if (name.includes('light')) return '/assets/services/event lighting.png';
-    if (name.includes('backdrop') || name.includes('stage')) return '/assets/services/decor and backdrop.png';
-    if (name.includes('decor') || name.includes('theme')) return '/assets/services/custom theme decor.png';
-    if (name.includes('host') || name.includes('mc')) return '/assets/services/host_mc.png';
-    if (name.includes('led') || name.includes('screen') || name.includes('display')) return '/assets/services/led display.png';
-    if (name.includes('photo')) return '/assets/services/photography.png';
-    if (name.includes('video') || name.includes('film')) return '/assets/services/videography.png';
-    return '/assets/services/custom theme decor.png';
-  };
+const getServiceImage = (service) => {
+  if (service.image) return service.image;
+
+  const name = (service.name || '').toLowerCase();
+
+  if (name.includes('sound') || name.includes('dj')) {
+    return '/assets/services/dj%20and%20sound%20system.png';
+  }
+
+  if (name.includes('light')) {
+    return '/assets/services/event%20lighting.png';
+  }
+
+  if (name.includes('backdrop') || name.includes('stage')) {
+    return '/assets/services/decor%20and%20backdrop.png';
+  }
+
+  if (name.includes('decor') || name.includes('theme')) {
+    return '/assets/services/custom%20theme%20decor.png';
+  }
+
+  if (name.includes('host') || name.includes('mc')) {
+    return '/assets/services/host_mc.png';
+  }
+
+  if (
+    name.includes('led') ||
+    name.includes('screen') ||
+    name.includes('display')
+  ) {
+    return '/assets/services/led%20display.png';
+  }
+
+  if (name.includes('photo')) {
+    return '/assets/services/photography.png';
+  }
+
+  if (name.includes('video') || name.includes('film')) {
+    return '/assets/services/videography.png';
+  }
+
+  return '/assets/services/custom%20theme%20decor.png';
+};
 
   return (
     <section className="section" style={{ backgroundColor: 'var(--bg-dark-elevated)', position: 'relative' }}>
@@ -115,7 +145,9 @@ export default function ServicesGrid({ limit = null }) {
                       className="badge badge-gold"
                       style={{ fontSize: '0.75rem', backdropFilter: 'blur(8px)', background: 'rgba(10,3,5,0.7)' }}
                     >
-                      From KD{Number(service.price).toLocaleString()}
+                      {Number(service.price) > 0
+                        ? `From KD ${Number(service.price).toLocaleString()}`
+                        : 'Price upon request'}
                     </span>
                   </div>
                 </div>

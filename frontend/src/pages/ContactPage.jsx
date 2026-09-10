@@ -71,7 +71,7 @@ export default function ContactPage() {
                   <div>
                     <div style={{ fontWeight: '600', color: 'var(--main-text)' }}>Address</div>
                     <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-                      100 Luxury Boulevard, Suite 500<br />Beverly Hills, CA 90210
+                      Kuwait<br />
                     </div>
                   </div>
                 </div>
@@ -83,13 +83,12 @@ export default function ContactPage() {
                   <div>
                     <div style={{ fontWeight: '600', color: 'var(--main-text)' }}>Direct Phone</div>
                     <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-                      +1 (800) 555-EVENT (3836)<br />
-                      +1 (310) 555-0199 (VIP Direct)
+                      +965 6643 3680<br />
                     </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                   <div style={{ padding: '0.75rem', borderRadius: '50%', background: 'rgba(191, 135, 78, 0.15)', color: 'var(--gold-accent)' }}>
                     <Mail size={20} />
                   </div>
@@ -97,23 +96,22 @@ export default function ContactPage() {
                     <div style={{ fontWeight: '600', color: 'var(--main-text)' }}>Email Inquiries</div>
                     <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
                       concierge@eventify.com<br />
-                      vip@eventify.com
                     </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                {/* <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                   <div style={{ padding: '0.75rem', borderRadius: '50%', background: 'rgba(214, 45, 112, 0.15)', color: 'var(--button-highlight)' }}>
                     <Clock size={20} />
                   </div>
                   <div>
-                    <div style={{ fontWeight: '600', color: 'var(--main-text)' }}>Office Hours</div>
+                    <div style={{ fontWeight: '600', color: 'var(--main-text)' }}>Working Hours</div>
                     <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-                      Monday – Saturday: 9:00 AM – 8:00 PM<br />
+                      Sun – Thursay: 8:00 AM – 4:00 PM<br />
                       Sunday: By Private VIP Appointment
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -172,7 +170,7 @@ export default function ContactPage() {
                       type="email"
                       required
                       className="form-input"
-                      placeholder="eleanor@example.com"
+                      placeholder="john.doe@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
@@ -183,7 +181,7 @@ export default function ContactPage() {
                       type="tel"
                       required
                       className="form-input"
-                      placeholder="+1 (555) 000-0000"
+                      placeholder="+(695) 0000-0000"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                     />
@@ -221,7 +219,7 @@ export default function ContactPage() {
 
                 <button type="submit" className="btn btn-primary btn-lg" style={{ marginTop: '0.75rem' }}>
                   <Send size={18} />
-                  <span>Send Concierge Request</span>
+                  <span>Send Contact Request</span>
                 </button>
               </form>
             )}

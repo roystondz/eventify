@@ -1,6 +1,6 @@
 // Centralized API Client with Fallback Mock Data for instant luxury experience
 
-const API_BASE = '';
+const API_BASE = 'http://localhost:8080';
 
 const getToken = () => localStorage.getItem('eventify_admin_token');
 
@@ -27,35 +27,35 @@ export const DEFAULT_SERVICES = [
     name: 'Decor & Backdrop Elegance',
     description: 'Premium shimmer walls, floral backdrops, geometric neon installations, and custom monogram arches.',
     price: 45,
-    image: '/assets/services/decor_and_backdrop.png',
+    image: '/assets/services/decor and backdrop.png',
   },
   {
     id: 2,
     name: 'Custom Theme Decor & Styling',
-    description: 'Bespoke floral arches, luxurious stage setups, custom props, and personalized theme decor.',
+    description: 'Fully Personalized floral arches, luxurious stage setups, custom props, and personalized theme decor.',
     price: 0, // price upon request
-    image: '/assets/services/custom_theme_decor.png',
+    image: '/assets/services/custom theme decor.png',
   },
   {
     id: 3,
     name: 'DJ & Sound System',
     description: 'Concert‑grade audio setup, wireless microphones, and professional DJ services.',
     price: 80,
-    image: '/assets/services/dj_sound.png',
+    image: '/assets/services/dj and sound system.png',
   },
   {
     id: 4,
     name: 'Event Lighting',
     description: 'Intelligent moving‑head lights, uplighting, and ambience creation.',
     price: 0, // price upon request
-    image: '/assets/services/event_lighting.png',
+    image: '/assets/services/event lighting.png',
   },
   {
     id: 5,
     name: 'LED Display',
     description: 'High‑resolution LED video walls and dynamic visual content.',
     price: 0, // price upon request
-    image: '/assets/services/led_display.png',
+    image: '/assets/services/led display.png',
   },
   {
     id: 6,
@@ -83,7 +83,7 @@ export const DEFAULT_SERVICES = [
     name: 'Photography + Videography',
     description: 'Combined photo and video package for complete coverage.',
     price: 100,
-    image: '/assets/services/photo_video_bundle.png',
+    image: '/assets/services/photography.png',
   },
 ];
 
@@ -131,7 +131,7 @@ export const DEFAULT_PACKAGES = [
 
 export const DEFAULT_ADDONS = [
   { id: 1, name: 'Host / MC', description: 'Charismatic multilingual hosts to keep the event flowing.', price: 45 },
-  { id: 2, name: 'Custom Theme Decor', description: 'Bespoke decor tailored to the client’s theme.', price: 0 }, // price upon request
+  { id: 2, name: 'Custom Theme Decor', description: 'Fully Personalized decor tailored to the client’s theme.', price: 0 }, // price upon request
   { id: 3, name: 'Event Lighting', description: 'Intelligent moving‑head lights, uplighting, and ambience creation.', price: 0 }, // price upon request
   { id: 4, name: 'LED Display', description: 'High‑resolution LED video walls and dynamic visual content.', price: 0 }, // price upon request
 ];

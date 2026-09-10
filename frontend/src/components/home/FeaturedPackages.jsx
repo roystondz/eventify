@@ -92,7 +92,7 @@ export default function FeaturedPackages({ limit = null }) {
                       <span>{pkg.savings}</span>
                     </span>
                   ) : (
-                    <span className="badge badge-pink">Bespoke Suite</span>
+                    <span className="badge badge-pink">Fully Personalized Suite</span>
                   )}
 
                   {isFeatured && (

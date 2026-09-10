@@ -126,7 +126,7 @@ export default function AdminSettingsPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div>
-                <label className="form-label">Concierge Phone Number</label>
+                <label className="form-label">Contact us Phone Number</label>
                 <input
                   type="text"
                   className="form-input"

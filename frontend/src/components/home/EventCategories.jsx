@@ -12,7 +12,7 @@ export const EVENT_CATEGORIES = [
   {
     id: 'engagements',
     title: 'Engagements & Proposals',
-    desc: 'Intimate candlelit soirées, bespoke floral arches, and cinematic milestone moments.',
+    desc: 'Intimate candlelit parties, Fully Personalized floral arches, and cinematic milestone moments.',
     image: '/assets/events/engagemnets.png',
   },
   {
@@ -36,7 +36,7 @@ export const EVENT_CATEGORIES = [
   {
     id: 'private-parties',
     title: 'Exclusive Private Parties',
-    desc: 'Bespoke DJ entertainment, interactive LED screens, and custom cocktail atmospheres.',
+    desc: 'Fully Personalized DJ entertainment, interactive LED screens, and custom cocktail atmospheres.',
     image: '/assets/events/private parties.png',
   },
   {
@@ -53,7 +53,7 @@ export const EVENT_CATEGORIES = [
   },
   {
     id: 'farewell-parties',
-    title: 'Farewell Soirées',
+    title: 'Farewell Parties',
     desc: 'Heartfelt, elegant ambiance with personalized photo walls and acoustic audio.',
     image: '/assets/events/farewell parties.png',
   },
@@ -64,9 +64,9 @@ export const EVENT_CATEGORIES = [
     image: '/assets/events/family celebrations.png',
   },
   {
-    id: 'custom-themed',
-    title: 'Custom Themed Productions',
-    desc: 'Immersive fantasy worlds, Gatsby galas, tropical retreats, and bespoke art sets.',
+    id: 'other-events',
+    title: 'Other Events',
+    desc: 'Immersive fantasy worlds, Gatsby galas, tropical retreats, and Fully Personalized art sets.',
     image: '/assets/events/custom themed.png',
   },
 ];
@@ -179,9 +179,9 @@ export default function EventCategories() {
                   </div>
                 </div>
 
-                <p style={{ color: 'var(--main-text)', opacity: 0.85, fontSize: '0.84rem', lineHeight: '1.5' }}>
+                {/* <p style={{ color: 'var(--main-text)', opacity: 0.85, fontSize: '0.84rem', lineHeight: '1.5' }}>
                   {cat.desc}
-                </p>
+                </p> */}
               </div>
             </Link>
           ))}

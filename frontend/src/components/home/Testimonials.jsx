@@ -15,7 +15,7 @@ const TESTIMONIALS = [
     rating: 5,
   },
   {
-    quote: "From the dry-ice cloud entrance to the bespoke neon lounge, our 30th birthday party was the most talked-about event of the year. Unmatched professionalism.",
+    quote: "From the dry-ice cloud entrance to the Fully Personalized neon lounge, our 30th birthday party was the most talked-about event of the year. Unmatched professionalism.",
     author: "Elena Rostova",
     event: "Private VIP Celebration • 150 Guests",
     rating: 5,

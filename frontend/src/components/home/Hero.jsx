@@ -72,7 +72,7 @@ export default function Hero() {
             style={{ padding: '0.45rem 1.1rem', fontSize: '0.82rem', gap: '0.5rem' }}
           >
             <Sparkles size={14} color="var(--light-champagne)" />
-            <span>BESPOKE LUXURY EVENT ARCHITECTS</span>
+            <span>FULLY PERSONALIZED LUXURY EVENT ARCHITECTS</span>
             <Sparkles size={14} color="var(--light-champagne)" />
           </span>
         </div>
@@ -104,7 +104,7 @@ export default function Hero() {
             fontWeight: 300,
           }}
         >
-          From grand fairytale weddings and high-profile corporate galas to exclusive VIP soirées, we blend breathtaking floral decor, concert-grade sound, intelligent lighting, and seamless production.
+          From grand fairytale weddings and high-profile corporate galas to exclusive VIP parties, we blend breathtaking floral decor, concert-grade sound, intelligent lighting, and seamless production.
         </p>
 
         {/* Action CTAs */}
@@ -139,9 +139,9 @@ export default function Hero() {
           }}
         >
           {[
-            { icon: Award, label: '1,200+ Events', sub: 'Flawlessly Executed' },
+            { icon: Award, label: '200+ Events', sub: 'Flawlessly Executed' },
             { icon: Star, label: '5-Star Rated', sub: 'Celebrity & VIP Choice' },
-            { icon: ShieldCheck, label: '100% Bespoke', sub: 'Custom Concepts' },
+            { icon: ShieldCheck, label: 'Fully Personalized', sub: 'Tailored to You' },
             { icon: Calendar, label: 'Full Production', sub: 'Decor, Sound & Lighting' },
           ].map((stat, i) => (
             <div
