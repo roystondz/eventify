@@ -1,8 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Globe, Sparkles, ArrowUpRight, Heart } from 'lucide-react';
+import { useSettings } from '../../context/SettingsContext';
+
+// Only allow real web links from the admin-editable settings.
+const safeUrl = (url) => (/^https:\/\//i.test(url || '') ? url : null);
 
 export default function Footer() {
+  const settings = useSettings();
+  const instagramUrl = safeUrl(settings.instagram_url);
+
   return (
     <footer
       style={{
@@ -28,7 +35,7 @@ export default function Footer() {
           <div>
             <Link to="/" style={{ display: 'inline-block', marginBottom: '1.25rem' }}>
               <img
-                src="/assets/brand/logo-full.png"
+                src="/assets/brand/logo-full.webp"
                 alt="Eventify"
                 style={{ height: '42px', width: 'auto' }}
               />
@@ -37,29 +44,32 @@ export default function Footer() {
               Elevate Every Moment. We architect Fully Personalized, luxury experiential events, breathtaking stages, cutting-edge audiovisuals, and unforgettable memories.
             </p>
             <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '50%',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--border-subtle)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--light-champagne)',
-                  transition: 'all var(--transition-fast)',
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-                  <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
-                </svg>
-              </a>
+              {instagramUrl && (
+                <a
+                  href={instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Eventify on Instagram"
+                  style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid var(--border-subtle)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--light-champagne)',
+                    transition: 'all var(--transition-fast)',
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+                  </svg>
+                </a>
+              )}
             </div>
           </div>
 
@@ -119,16 +129,18 @@ export default function Footer() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
                 <MapPin size={18} color="var(--gold-accent)" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span>Kuwait</span>
+                <span>{settings.address}</span>
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                 <Phone size={18} color="var(--gold-accent)" style={{ flexShrink: 0 }} />
-                <span>WhatsApp / Contact: +965 6643 3680</span>
+                <span>WhatsApp / Contact: {settings.phone}</span>
               </div>
-              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                <Mail size={18} color="var(--gold-accent)" style={{ flexShrink: 0 }} />
-                <span>concierge@eventify.com</span>
-              </div>
+              {settings.email && (
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                  <Mail size={18} color="var(--gold-accent)" style={{ flexShrink: 0 }} />
+                  <a href={`mailto:${settings.email}`} style={{ color: 'inherit' }}>{settings.email}</a>
+                </div>
+              )}
               <Link to="/calculator" className="btn btn-outline btn-sm" style={{ marginTop: '0.5rem', alignSelf: 'flex-start' }}>
                 <Sparkles size={14} />
                 <span>Get Instant Quote</span>
@@ -152,7 +164,7 @@ export default function Footer() {
           }}
         >
           <div>
-            © {new Date().getFullYear()} Eventify Experiences Inc. All rights reserved.
+            © {new Date().getFullYear()} {settings.company_name}. All rights reserved.
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <span>Crafted with</span>

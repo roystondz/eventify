@@ -1,7 +1,19 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { CheckCircle, AlertCircle, Info, X } from 'lucide-react';
 
+const AUTO_DISMISS_MS = { success: 4000, info: 5000, error: 7000 };
+
 export default function Toast({ message, type = 'success', onClose }) {
+  // Callers pass an inline onClose; keep the latest without restarting the timer.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    if (!message) return undefined;
+    const timer = setTimeout(() => onCloseRef.current?.(), AUTO_DISMISS_MS[type] ?? 5000);
+    return () => clearTimeout(timer);
+  }, [message, type]);
+
   if (!message) return null;
 
   const isSuccess = type === 'success';
@@ -9,6 +21,7 @@ export default function Toast({ message, type = 'success', onClose }) {
 
   return (
     <div
+      role={isError ? 'alert' : 'status'}
       style={{
         position: 'fixed',
         bottom: '2rem',
@@ -23,7 +36,7 @@ export default function Toast({ message, type = 'success', onClose }) {
         borderRadius: 'var(--radius-md)',
         boxShadow: 'var(--shadow-lg)',
         color: '#FFFFFF',
-        maxWidth: '400px',
+        maxWidth: 'min(400px, calc(100vw - 4rem))',
         animation: 'fadeIn 0.3s ease-out forwards',
       }}
     >
@@ -36,6 +49,7 @@ export default function Toast({ message, type = 'success', onClose }) {
       {onClose && (
         <button
           onClick={onClose}
+          aria-label="Dismiss"
           style={{
             background: 'none',
             border: 'none',

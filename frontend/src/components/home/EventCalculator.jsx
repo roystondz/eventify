@@ -13,17 +13,21 @@ import {
   ArrowRight,
   ShieldCheck
 } from 'lucide-react';
+import { api } from '../../services/api';
 import {
-  api,
-  DEFAULT_PACKAGES,
-  DEFAULT_SERVICES,
-  DEFAULT_ADDONS
-} from '../../services/api';
+  calculateQuote,
+  formatItemPrice,
+  formatKD,
+  isIncludedInPackage
+} from '../../lib/quote';
+import { openWhatsApp } from '../../lib/whatsapp';
+import { useSettings } from '../../context/SettingsContext';
 import { EVENT_CATEGORIES } from './EventCategories';
 import Toast from '../common/Toast';
 
 export default function EventCalculator() {
   const [searchParams] = useSearchParams();
+  const settings = useSettings();
 
   // Data from backend
   const [packages, setPackages] = useState([]);
@@ -38,7 +42,7 @@ export default function EventCalculator() {
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [selectedServices, setSelectedServices] = useState([]);
   const [selectedAddons, setSelectedAddons] = useState([]);
-  const [guestCount, setGuestCount] = useState(150);
+  const [guestCount, setGuestCount] = useState('150');
   const [eventDate, setEventDate] = useState('');
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
@@ -47,7 +51,8 @@ export default function EventCalculator() {
 
   // UI state
   const [submitted, setSubmitted] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState({ message: '', type: 'success' });
 
   useEffect(() => {
     let isMounted = true;
@@ -95,6 +100,21 @@ export default function EventCalculator() {
     };
   }, [searchParams]);
 
+  // Makes a card behave like a toggle button for mouse and keyboard.
+  const pressable = (onActivate, pressed, disabled = false) => ({
+    role: 'button',
+    tabIndex: disabled ? -1 : 0,
+    'aria-pressed': pressed,
+    'aria-disabled': disabled || undefined,
+    onClick: disabled ? undefined : onActivate,
+    onKeyDown: (e) => {
+      if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        onActivate();
+      }
+    }
+  });
+
   // Toggle Services
   const toggleService = (srv) => {
     if (selectedServices.some((s) => s.id === srv.id)) {
@@ -121,108 +141,100 @@ export default function EventCalculator() {
   // Calculate Totals
   // --------------------------------------------------
 
-  const packageTotal = selectedPackage
-    ? Number(selectedPackage.price)
-    : 0;
+  // Services already in the chosen package are shown as included and not
+  // charged twice. Price 0 means "price upon request" and adds nothing.
+  const {
+    chargedServices,
+    total: grandTotal,
+    hasPriceOnRequest: hasPriceUponRequest
+  } = calculateQuote({
+    pkg: selectedPackage,
+    services: selectedServices,
+    addons: selectedAddons
+  });
 
-  // Only add services that have an actual price.
-  // Price upon request (price = 0) contributes 0
-  // to the current estimate.
-  const servicesTotal = selectedServices.reduce(
-    (sum, s) =>
-      sum + (Number(s.price) > 0 ? Number(s.price) : 0),
-    0
-  );
+  // e.g. "KD 650" or "KD 650+"
+  const formattedGrandTotal = formatKD(grandTotal, {
+    onRequest: hasPriceUponRequest
+  });
 
-  const addonsTotal = selectedAddons.reduce(
-    (sum, a) =>
-      sum + (Number(a.price) > 0 ? Number(a.price) : 0),
-    0
-  );
-
-  const grandTotal =
-    packageTotal +
-    servicesTotal +
-    addonsTotal;
-
-  // Check whether any selected item requires
-  // a custom price.
-  const hasPriceUponRequest =
-    selectedServices.some((s) => Number(s.price) === 0) ||
-    selectedAddons.some((a) => Number(a.price) === 0);
-
-  // Display the estimate.
-  // Example:
-  // KD650
-  // or
-  // KD650+
-  const formattedGrandTotal =
-    `KD${grandTotal.toLocaleString()}${hasPriceUponRequest ? '+' : ''}`;
+  const isIncluded = (srv) =>
+    isIncludedInPackage(srv, selectedPackage);
 
   // --------------------------------------------------
   // Handle WhatsApp Inquiry
   // --------------------------------------------------
 
   const handleWhatsApp = () => {
-    const selectedServicesText =
-      selectedServices
-        .map((s) =>
-          Number(s.price) > 0
-            ? `${s.name} (KD${Number(s.price).toLocaleString()})`
-            : `${s.name} (Price upon request)`
-        )
+    const describe = (items) =>
+      items
+        .map((item) => `${item.name} (${formatItemPrice(item)})`)
         .join(', ') || 'None';
 
-    const selectedAddonsText =
-      selectedAddons
-        .map((a) =>
-          Number(a.price) > 0
-            ? `${a.name} (KD${Number(a.price).toLocaleString()})`
-            : `${a.name} (Price upon request)`
-        )
-        .join(', ') || 'None';
-
-    const text =
-      `Hello Eventify! I would like to inquire about booking an event.%0A%0A` +
-      `*Occasion:* ${selectedCategory}%0A` +
+    openWhatsApp(settings.whatsapp_number, [
+      'Hello Eventify! I would like to inquire about booking an event.',
+      '',
+      `*Occasion:* ${selectedCategory}`,
       `*Base Package:* ${
         selectedPackage
-          ? selectedPackage.name +
-            ' (KD' +
-            Number(selectedPackage.price).toLocaleString() +
-            ')'
+          ? `${selectedPackage.name} (${formatKD(selectedPackage.price)})`
           : 'Custom Build'
-      }%0A` +
-      `*Extra Services:* ${selectedServicesText}%0A` +
-      `*Addons:* ${selectedAddonsText}%0A` +
-      `*Estimated Guests:* ${guestCount}%0A` +
-      `*Date:* ${eventDate || 'TBD'}%0A` +
-      `*Estimated Total:* ${formattedGrandTotal}%0A` +
-      `${
-        hasPriceUponRequest
-          ? '*Note:* Some selected items are priced upon request and are not included in the estimate.%0A'
-          : ''
-      }%0A` +
-      `Name: ${contactName || 'Client'}`;
-
-    window.open(
-      `https://wa.me/18005553836?text=${text}`,
-      '_blank'
-    );
+      }`,
+      `*Extra Services:* ${describe(chargedServices)}`,
+      `*Add-ons:* ${describe(selectedAddons)}`,
+      `*Estimated Guests:* ${guestCount || 'TBD'}`,
+      `*Date:* ${eventDate || 'TBD'}`,
+      `*Estimated Total:* ${formattedGrandTotal}`,
+      hasPriceUponRequest
+        ? '*Note:* Some selected items are priced upon request and are not included in the estimate.'
+        : null,
+      notes ? `*Notes:* ${notes}` : null,
+      '',
+      `Name: ${contactName || 'Client'}`,
+      contactEmail ? `Email: ${contactEmail}` : null,
+      contactPhone ? `Phone: ${contactPhone}` : null
+    ]);
   };
 
   // --------------------------------------------------
   // Handle Form Submit
   // --------------------------------------------------
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
 
-    setSubmitted(true);
+    try {
+      await api.submitInquiry({
+        source: 'builder',
+        name: contactName,
+        email: contactEmail,
+        phone: contactPhone,
+        event_type: selectedCategory,
+        event_date: eventDate,
+        guest_count: guestCount === '' ? null : Number(guestCount),
+        message: notes,
+        // The server looks up current prices from these ids.
+        selection: {
+          packageId: selectedPackage?.id ?? null,
+          serviceIds: chargedServices.map((s) => s.id),
+          addonIds: selectedAddons.map((a) => a.id)
+        }
+      });
 
-    setToastMessage(
-      'Your luxury event proposal request has been received! Our concierge will contact you within 2 hours.'
-    );
+      setSubmitted(true);
+      setToast({
+        message: 'Your proposal request has been received! We will contact you shortly.',
+        type: 'success'
+      });
+    } catch (err) {
+      setToast({
+        message: `Could not send your request: ${err.message} You can also reach us on WhatsApp.`,
+        type: 'error'
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -482,11 +494,10 @@ export default function EventCalculator() {
                   return (
                     <div
                       key={pkg.id}
-                      onClick={() =>
-                        setSelectedPackage(
-                          isSelected ? null : pkg
-                        )
-                      }
+                      {...pressable(
+                        () => setSelectedPackage(isSelected ? null : pkg),
+                        isSelected
+                      )}
                       style={{
                         padding: '1.25rem',
                         background: isSelected
@@ -627,7 +638,9 @@ export default function EventCalculator() {
                 }}
               >
                 {services.map((srv) => {
+                  const included = isIncluded(srv);
                   const isSelected =
+                    included ||
                     selectedServices.some(
                       (s) => s.id === srv.id
                     );
@@ -635,7 +648,12 @@ export default function EventCalculator() {
                   return (
                     <div
                       key={srv.id}
-                      onClick={() => toggleService(srv)}
+                      {...pressable(
+                        () => toggleService(srv),
+                        isSelected,
+                        included
+                      )}
+                      title={included ? 'Already included in the selected package' : undefined}
                       style={{
                         padding: '1.1rem',
                         background: isSelected
@@ -647,7 +665,8 @@ export default function EventCalculator() {
                             : 'var(--border-subtle)'
                         }`,
                         borderRadius: 'var(--radius-sm)',
-                        cursor: 'pointer',
+                        cursor: included ? 'default' : 'pointer',
+                        opacity: included ? 0.75 : 1,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
@@ -674,11 +693,13 @@ export default function EventCalculator() {
                             color: 'var(--light-champagne)'
                           }}
                         >
-                          {Number(srv.price) === 0
-                            ? 'Price upon request'
-                            : `+KD ${Number(
-                                srv.price
-                              ).toLocaleString()}`}
+                          {included
+                            ? 'Included in package'
+                            : Number(srv.price) === 0
+                              ? 'Price upon request'
+                              : `+KD ${Number(
+                                  srv.price
+                                ).toLocaleString()}`}
                         </div>
                       </div>
 
@@ -779,7 +800,10 @@ export default function EventCalculator() {
                   return (
                     <div
                       key={add.id}
-                      onClick={() => toggleAddon(add)}
+                      {...pressable(
+                        () => toggleAddon(add),
+                        isSelected
+                      )}
                       style={{
                         padding: '1.1rem',
                         background: isSelected
@@ -981,11 +1005,9 @@ export default function EventCalculator() {
                       color: 'var(--main-text)'
                     }}
                   >
-                    {Number(s.price) > 0
-                      ? `KD${Number(
-                          s.price
-                        ).toLocaleString()}`
-                      : 'Price upon request'}
+                    {isIncluded(s)
+                      ? 'Included'
+                      : formatItemPrice(s)}
                   </span>
                 </div>
               ))}
@@ -1166,6 +1188,7 @@ export default function EventCalculator() {
                     <input
                       type="date"
                       className="form-input"
+                      min={new Date().toISOString().slice(0, 10)}
                       value={eventDate}
                       onChange={(e) =>
                         setEventDate(e.target.value)
@@ -1192,7 +1215,7 @@ export default function EventCalculator() {
                       min="10"
                       max="5000"
                       onChange={(e) =>
-                        setGuestCount(Number(e.target.value))
+                        setGuestCount(e.target.value)
                       }
                       style={{
                         fontSize: '0.85rem',
@@ -1206,6 +1229,8 @@ export default function EventCalculator() {
                   <input
                     type="text"
                     required
+                    autoComplete="name"
+                    aria-label="Full name"
                     placeholder="Your Full Name *"
                     className="form-input"
                     value={contactName}
@@ -1229,6 +1254,8 @@ export default function EventCalculator() {
                   <input
                     type="email"
                     required
+                    autoComplete="email"
+                    aria-label="Email address"
                     placeholder="Email Address *"
                     className="form-input"
                     value={contactEmail}
@@ -1243,6 +1270,8 @@ export default function EventCalculator() {
 
                   <input
                     type="tel"
+                    autoComplete="tel"
+                    aria-label="Phone or WhatsApp number"
                     placeholder="Phone / WhatsApp"
                     className="form-input"
                     value={contactPhone}
@@ -1256,16 +1285,35 @@ export default function EventCalculator() {
                   />
                 </div>
 
+                <textarea
+                  rows={3}
+                  placeholder="Venue, theme, or anything else we should know"
+                  aria-label="Additional notes"
+                  className="form-textarea"
+                  value={notes}
+                  maxLength={4000}
+                  onChange={(e) => setNotes(e.target.value)}
+                  style={{
+                    fontSize: '0.85rem',
+                    padding: '0.65rem'
+                  }}
+                />
+
                 <button
                   type="submit"
                   className="btn btn-primary"
+                  disabled={submitting}
                   style={{
                     width: '100%',
                     marginTop: '0.5rem'
                   }}
                 >
                   <Send size={16} />
-                  <span>Request Official Proposal</span>
+                  <span>
+                    {submitting
+                      ? 'Sending...'
+                      : 'Request Official Proposal'}
+                  </span>
                 </button>
 
                 <button
@@ -1284,8 +1332,9 @@ export default function EventCalculator() {
       </div>
 
       <Toast
-        message={toastMessage}
-        onClose={() => setToastMessage('')}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: '', type: 'success' })}
       />
 
       <style>{`

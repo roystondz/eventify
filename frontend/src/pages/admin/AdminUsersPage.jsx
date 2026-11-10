@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Key, ShieldCheck, ShieldAlert, Trash2, Check, Lock } from 'lucide-react';
+import { Users, Plus, Key, ShieldCheck, ShieldAlert, Trash2, Check, Lock, RefreshCw } from 'lucide-react';
 import { api } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import Modal from '../../components/common/Modal';
 import Toast from '../../components/common/Toast';
 
@@ -16,18 +17,21 @@ export default function AdminUsersPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [toastMessage, setToastMessage] = useState('');
+  const [toast, setToast] = useState({ message: '', type: 'success' });
+  const [loadError, setLoadError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const { adminUser } = useAuth();
+
+  const notify = (message, type = 'success') => setToast({ message, type });
+  const isSelf = (admin) => admin.username === adminUser?.username;
 
   const loadAdmins = async () => {
     setLoading(true);
+    setLoadError('');
     try {
-      const data = await api.getAdmins();
-      setAdmins(data);
-    } catch (e) {
-      console.warn('Fallback admin user list:', e);
-      setAdmins([
-        { id: 1, username: 'admin', is_active: 1, created_at: new Date().toISOString() },
-      ]);
+      setAdmins(await api.admin.listAdmins());
+    } catch (err) {
+      setLoadError(err.message);
     } finally {
       setLoading(false);
     }
@@ -39,58 +43,46 @@ export default function AdminUsersPage() {
 
   const handleCreateAdmin = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
-      await api.createAdmin(username, password);
-      setToastMessage(`Admin user "${username}" created!`);
+      await api.admin.createAdmin(username, password);
+      notify(`Admin "${username}" created`);
       setIsCreateOpen(false);
       setUsername('');
       setPassword('');
       loadAdmins();
     } catch (err) {
-      console.warn('API sync, adding to local state:', err);
-      setAdmins([...admins, { id: Date.now(), username, is_active: 1, created_at: new Date().toISOString() }]);
-      setToastMessage(`Admin user "${username}" added`);
-      setIsCreateOpen(false);
+      notify(`Could not create admin: ${err.message}`, 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (!selectedAdmin) return;
+    setSaving(true);
     try {
-      await api.changeAdminPassword(selectedAdmin.id, newPassword);
-      setToastMessage(`Password updated for "${selectedAdmin.username}"`);
+      await api.admin.changeAdminPassword(selectedAdmin.id, newPassword);
+      notify(`Password updated for "${selectedAdmin.username}"`);
       setIsPasswordOpen(false);
       setNewPassword('');
     } catch (err) {
-      console.warn('API error:', err);
-      setToastMessage(`Password changed for "${selectedAdmin.username}"`);
-      setIsPasswordOpen(false);
+      notify(`Could not change password: ${err.message}`, 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleToggleStatus = async (admin) => {
-    const nextStatus = admin.is_active === 1 ? 0 : 1;
+    const activate = admin.is_active !== 1;
+    if (!activate && !window.confirm(`Deactivate "${admin.username}"? They will be signed out immediately.`)) return;
     try {
-      await api.updateAdmin(admin.id, nextStatus);
-      setToastMessage(`Admin ${admin.username} is now ${nextStatus === 1 ? 'Active' : 'Disabled'}`);
+      await api.admin.setAdminActive(admin.id, activate);
+      notify(`"${admin.username}" is now ${activate ? 'active' : 'deactivated'}`);
       loadAdmins();
     } catch (err) {
-      console.warn('API error, updating local state:', err);
-      setAdmins(admins.map(a => a.id === admin.id ? { ...a, is_active: nextStatus } : a));
-    }
-  };
-
-  const handleDeleteAdmin = async (id) => {
-    if (!window.confirm('Are you sure you want to disable/remove this administrator?')) return;
-    try {
-      await api.deleteAdmin(id);
-      setToastMessage('Admin account deactivated');
-      loadAdmins();
-    } catch (err) {
-      console.warn('API error:', err);
-      setAdmins(admins.filter(a => a.id !== id));
-      setToastMessage('Admin account removed');
+      notify(`Could not update "${admin.username}": ${err.message}`, 'error');
     }
   };
 
@@ -131,6 +123,18 @@ export default function AdminUsersPage() {
                   Loading administrators...
                 </td>
               </tr>
+            ) : loadError ? (
+              <tr>
+                <td colSpan={4} style={{ textAlign: 'center', padding: '2.5rem' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <span style={{ color: '#FFA5C9' }}>Could not load administrators: {loadError}</span>
+                    <button onClick={loadAdmins} className="btn btn-outline btn-sm">
+                      <RefreshCw size={14} />
+                      <span>Retry</span>
+                    </button>
+                  </span>
+                </td>
+              </tr>
             ) : (
               admins.map((admin) => (
                 <tr key={admin.id}>
@@ -153,6 +157,9 @@ export default function AdminUsersPage() {
                         {admin.username.charAt(0).toUpperCase()}
                       </div>
                       <span>{admin.username}</span>
+                      {isSelf(admin) && (
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }}>(you)</span>
+                      )}
                     </div>
                   </td>
                   <td>
@@ -167,7 +174,7 @@ export default function AdminUsersPage() {
                     )}
                   </td>
                   <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    {admin.created_at ? new Date(admin.created_at).toLocaleDateString() : 'Active'}
+                    {admin.created_at ? new Date(admin.created_at).toLocaleDateString() : '—'}
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
@@ -194,20 +201,22 @@ export default function AdminUsersPage() {
                         <span>Password</span>
                       </button>
 
-                      <button
-                        onClick={() => handleToggleStatus(admin)}
-                        style={{
-                          background: admin.is_active === 1 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(74, 222, 128, 0.15)',
-                          border: `1px solid ${admin.is_active === 1 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(74, 222, 128, 0.4)'}`,
-                          borderRadius: 'var(--radius-sm)',
-                          padding: '0.4rem 0.6rem',
-                          color: admin.is_active === 1 ? '#EF4444' : '#4ADE80',
-                          cursor: 'pointer',
-                          fontSize: '0.78rem',
-                        }}
-                      >
-                        {admin.is_active === 1 ? 'Deactivate' : 'Activate'}
-                      </button>
+                      {!isSelf(admin) && (
+                        <button
+                          onClick={() => handleToggleStatus(admin)}
+                          style={{
+                            background: admin.is_active === 1 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(74, 222, 128, 0.15)',
+                            border: `1px solid ${admin.is_active === 1 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(74, 222, 128, 0.4)'}`,
+                            borderRadius: 'var(--radius-sm)',
+                            padding: '0.4rem 0.6rem',
+                            color: admin.is_active === 1 ? '#EF4444' : '#4ADE80',
+                            cursor: 'pointer',
+                            fontSize: '0.78rem',
+                          }}
+                        >
+                          {admin.is_active === 1 ? 'Deactivate' : 'Activate'}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -242,6 +251,8 @@ export default function AdminUsersPage() {
             <input
               type="password"
               required
+              minLength={8}
+              autoComplete="new-password"
               placeholder="Minimum 8 characters"
               className="form-input"
               value={password}
@@ -250,9 +261,9 @@ export default function AdminUsersPage() {
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-            <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+            <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={saving}>
               <Check size={16} />
-              <span>Create Account</span>
+              <span>{saving ? 'Creating...' : 'Create Account'}</span>
             </button>
             <button type="button" onClick={() => setIsCreateOpen(false)} className="btn btn-outline">
               Cancel
@@ -274,7 +285,9 @@ export default function AdminUsersPage() {
             <input
               type="password"
               required
-              placeholder="Enter new strong password"
+              minLength={8}
+              autoComplete="new-password"
+              placeholder="Minimum 8 characters"
               className="form-input"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
@@ -282,9 +295,9 @@ export default function AdminUsersPage() {
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-            <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+            <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={saving}>
               <Check size={16} />
-              <span>Update Password</span>
+              <span>{saving ? 'Updating...' : 'Update Password'}</span>
             </button>
             <button type="button" onClick={() => setIsPasswordOpen(false)} className="btn btn-outline">
               Cancel
@@ -293,7 +306,7 @@ export default function AdminUsersPage() {
         </form>
       </Modal>
 
-      <Toast message={toastMessage} onClose={() => setToastMessage('')} />
+      <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: '', type: 'success' })} />
     </div>
   );
 }

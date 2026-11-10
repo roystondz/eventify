@@ -3,23 +3,24 @@ import { Sparkles, Maximize2, X, Eye } from 'lucide-react';
 import Modal from '../common/Modal';
 
 const GALLERY_ITEMS = [
-  { id: 1, title: 'Grand Royal Stage & Chandelier Canopy', category: 'Weddings', img: '/assets/banners/1.png' },
-  { id: 2, title: 'Intimate Candlelit Dining Experience', category: 'Private Dinners', img: '/assets/banners/2.png' },
-  { id: 3, title: 'Neon Themed DJ Stage & Club Lighting', category: 'Parties', img: '/assets/banners/3.png' },
-  { id: 4, title: 'Fully Personalized Floral Arch & Gold Staging', category: 'Weddings', img: '/assets/banners/4.png' },
-  { id: 5, title: 'Architectural Uplighting & Banquet Setup', category: 'Galas', img: '/assets/banners/5.png' },
-  { id: 6, title: 'Ultra-Wide Curved LED Screen Production', category: 'Corporate', img: '/assets/banners/6.png' },
-  { id: 7, title: 'Fairytale Entrance Tunnel & Cold Sparks', category: 'Weddings', img: '/assets/banners/7.png' },
-  { id: 8, title: 'High-Fashion VIP Milestone Reception', category: 'Anniversaries', img: '/assets/banners/8.png' },
-  { id: 9, title: 'Immersive Laser & Sound Stage', category: 'Parties', img: '/assets/banners/9.png' },
-  { id: 10, title: 'Grand Ballroom Floral Centerpiece Walkway', category: 'Galas', img: '/assets/banners/10.png' },
+  { id: 1, title: 'Grand Royal Stage & Chandelier Canopy', category: 'Weddings', img: '/assets/banners/1.webp' },
+  { id: 2, title: 'Intimate Candlelit Dining Experience', category: 'Private Dinners', img: '/assets/banners/2.webp' },
+  { id: 3, title: 'Neon Themed DJ Stage & Club Lighting', category: 'Parties', img: '/assets/banners/3.webp' },
+  { id: 4, title: 'Fully Personalized Floral Arch & Gold Staging', category: 'Weddings', img: '/assets/banners/4.webp' },
+  { id: 5, title: 'Architectural Uplighting & Banquet Setup', category: 'Galas', img: '/assets/banners/5.webp' },
+  { id: 6, title: 'Ultra-Wide Curved LED Screen Production', category: 'Corporate', img: '/assets/banners/6.webp' },
+  { id: 7, title: 'Fairytale Entrance Tunnel & Cold Sparks', category: 'Weddings', img: '/assets/banners/7.webp' },
+  { id: 8, title: 'High-Fashion VIP Milestone Reception', category: 'Anniversaries', img: '/assets/banners/8.webp' },
+  { id: 9, title: 'Immersive Laser & Sound Stage', category: 'Parties', img: '/assets/banners/9.webp' },
+  { id: 10, title: 'Grand Ballroom Floral Centerpiece Walkway', category: 'Galas', img: '/assets/banners/10.webp' },
 ];
 
 export default function GalleryShowcase({ isFullPage = false }) {
   const [filter, setFilter] = useState('All');
   const [selectedImage, setSelectedImage] = useState(null);
 
-  const categories = ['All', 'Weddings', 'Galas', 'Parties', 'Private Dinners', 'Corporate'];
+  // Built from the photos so every category has a filter.
+  const categories = ['All', ...new Set(GALLERY_ITEMS.map((item) => item.category))];
 
   const filteredItems = filter === 'All'
     ? (isFullPage ? GALLERY_ITEMS : GALLERY_ITEMS.slice(0, 6))
@@ -57,6 +58,7 @@ export default function GalleryShowcase({ isFullPage = false }) {
                 key={cat}
                 type="button"
                 onClick={() => setFilter(cat)}
+                aria-pressed={filter === cat}
                 style={{
                   padding: '0.5rem 1.25rem',
                   borderRadius: 'var(--radius-full)',
@@ -87,6 +89,15 @@ export default function GalleryShowcase({ isFullPage = false }) {
             <div
               key={item.id}
               onClick={() => setSelectedImage(item)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedImage(item);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={`View ${item.title}`}
               className="glass-card"
               style={{
                 height: '300px',
@@ -98,7 +109,8 @@ export default function GalleryShowcase({ isFullPage = false }) {
             >
               <img
                 src={item.img}
-                alt={item.category}
+                alt={item.title}
+                loading="lazy"
                 style={{
                   width: '100%',
                   height: '100%',

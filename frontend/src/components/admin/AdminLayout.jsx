@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, NavLink, useNavigate, Outlet } from 'react-router-dom';
+import { Link, NavLink, Navigate, useNavigate, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard,
   Package,
@@ -9,7 +9,7 @@ import {
   Users,
   LogOut,
   ExternalLink,
-  ShieldAlert,
+  Inbox,
   Sparkles
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -25,12 +25,12 @@ export default function AdminLayout() {
   };
 
   if (!isAuthenticated) {
-    navigate('/admin/login');
-    return null;
+    return <Navigate to="/admin/login" replace />;
   }
 
   const navItems = [
     { label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
+    { label: 'Inquiries', path: '/admin/inquiries', icon: Inbox },
     { label: 'Services', path: '/admin/services', icon: Layers },
     { label: 'Packages', path: '/admin/packages', icon: Package },
     { label: 'Add-ons', path: '/admin/addons', icon: PlusCircle },
@@ -45,7 +45,7 @@ export default function AdminLayout() {
         {/* Brand Header */}
         <div style={{ padding: '1.75rem 1.5rem', borderBottom: '1px solid var(--border-subtle)' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <img src="/assets/brand/logo-full.png" alt="Eventify" style={{ height: '32px', width: 'auto' }} />
+            <img src="/assets/brand/logo-full.webp" alt="Eventify" style={{ height: '32px', width: 'auto' }} />
           </Link>
           <div
             style={{
@@ -108,6 +108,7 @@ export default function AdminLayout() {
             <Link
               to="/"
               target="_blank"
+              rel="noopener noreferrer"
               style={{
                 flex: 1,
                 padding: '0.45rem',
@@ -169,6 +170,20 @@ export default function AdminLayout() {
             </button>
           </div>
         </header>
+
+        {/* Mobile navigation (the sidebar is hidden below 900px) */}
+        <nav className="admin-mobile-nav" aria-label="Admin sections">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`}
+            >
+              <item.icon size={16} />
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+        </nav>
 
         <div className="admin-content">
           <Outlet />

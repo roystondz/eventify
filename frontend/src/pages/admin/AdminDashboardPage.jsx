@@ -11,40 +11,42 @@ import {
   ArrowUpRight,
   Sparkles,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  Inbox
 } from 'lucide-react';
 import { api } from '../../services/api';
 
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState({
-    servicesCount: 0,
-    packagesCount: 0,
-    addonsCount: 0,
-    adminsCount: 0,
-    systemHealthy: true,
-  });
+  const [stats, setStats] = useState({});
   const [recentPackages, setRecentPackages] = useState([]);
   const [loading, setLoading] = useState(true);
+  // null while checking, then true / false.
+  const [apiHealthy, setApiHealthy] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
+    // Each count loads independently so one failure doesn't blank the page.
+    const count = (promise) => promise.then((items) => items.length).catch(() => null);
+
     Promise.all([
-      api.getServices(),
-      api.getPackages(),
-      api.getAddons(),
-      api.getAdmins().catch(() => [{ id: 1, username: 'admin', is_active: 1 }]),
-    ]).then(([services, packages, addons, admins]) => {
-      if (isMounted) {
-        setStats({
-          servicesCount: services.length,
-          packagesCount: packages.length,
-          addonsCount: addons.length,
-          adminsCount: admins.length || 1,
-          systemHealthy: true,
-        });
-        setRecentPackages(packages.slice(0, 4));
-        setLoading(false);
-      }
+      count(api.admin.services.list()),
+      api.admin.packages.list().catch(() => null),
+      count(api.admin.addons.list()),
+      count(api.admin.listAdmins()),
+      api.admin.listInquiries().catch(() => null),
+      fetch('/api/health').then((res) => res.ok).catch(() => false),
+    ]).then(([servicesCount, packages, addonsCount, adminsCount, inquiries, healthy]) => {
+      if (!isMounted) return;
+      setStats({
+        servicesCount,
+        packagesCount: packages ? packages.length : null,
+        addonsCount,
+        adminsCount,
+        newInquiriesCount: inquiries ? inquiries.filter((i) => i.status === 'new').length : null,
+      });
+      setRecentPackages(packages ? packages.slice(0, 4) : []);
+      setApiHealthy(healthy);
+      setLoading(false);
     });
 
     return () => {
@@ -53,6 +55,7 @@ export default function AdminDashboardPage() {
   }, []);
 
   const statCards = [
+    { label: 'New Inquiries', count: stats.newInquiriesCount, icon: Inbox, link: '/admin/inquiries', color: '#4ADE80' },
     { label: 'Active Packages', count: stats.packagesCount, icon: Package, link: '/admin/packages', color: 'var(--button-highlight)' },
     { label: 'Live Services', count: stats.servicesCount, icon: Layers, link: '/admin/services', color: 'var(--gold-accent)' },
     { label: 'Event Add-ons', count: stats.addonsCount, icon: PlusCircle, link: '/admin/addons', color: 'var(--light-champagne)' },
@@ -131,7 +134,7 @@ export default function AdminDashboardPage() {
                 {card.label}
               </div>
               <div className="font-bebas" style={{ fontSize: '2.5rem', color: '#FFFFFF', lineHeight: '1.1', marginTop: '0.2rem' }}>
-                {loading ? '...' : card.count}
+                {loading ? '...' : card.count ?? '—'}
               </div>
             </div>
           </Link>
@@ -152,6 +155,11 @@ export default function AdminDashboardPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {!loading && recentPackages.length === 0 && (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>
+                No packages yet. <Link to="/admin/packages" style={{ color: 'var(--button-highlight)' }}>Create one</Link>.
+              </p>
+            )}
             {recentPackages.map((pkg) => (
               <div
                 key={pkg.id}
@@ -174,7 +182,7 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
                 <div className="font-bebas" style={{ fontSize: '1.4rem', color: '#FFF' }}>
-                  KD{Number(pkg.price).toLocaleString()}
+                  KD {Number(pkg.price).toLocaleString()}
                 </div>
               </div>
             ))}
@@ -188,17 +196,22 @@ export default function AdminDashboardPage() {
               Backend API Status
             </h3>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#4ADE80', boxShadow: '0 0 10px #4ADE80' }} />
-              <span style={{ fontWeight: '600', color: '#4ADE80', fontSize: '0.92rem' }}>
-                REST Engine Operational
-              </span>
-            </div>
+            {(() => {
+              const color = apiHealthy === null ? 'var(--text-muted)' : apiHealthy ? '#4ADE80' : '#EF4444';
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: color, boxShadow: `0 0 10px ${color}` }} />
+                  <span style={{ fontWeight: '600', color, fontSize: '0.92rem' }}>
+                    {apiHealthy === null ? 'Checking...' : apiHealthy ? 'API Operational' : 'API Unreachable'}
+                  </span>
+                </div>
+              );
+            })()}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-              <div>• Database Engine: SQLite3 with Embedded Migrations</div>
-              <div>• JWT Authentication: Active</div>
-              <div>• API Proxy Target: localhost:8080</div>
+              <div>• Backend: Node.js + Express</div>
+              <div>• Database: SQLite</div>
+              <div>• Sessions: JWT, expire after 24 hours</div>
             </div>
           </div>
 

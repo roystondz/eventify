@@ -1,25 +1,55 @@
 import React, { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, Send, MessageSquare, Sparkles, CheckCircle2 } from 'lucide-react';
 import Toast from '../components/common/Toast';
+import { EVENT_CATEGORIES } from '../components/home/EventCategories';
+import { useSettings } from '../context/SettingsContext';
+import { api } from '../services/api';
+import { openWhatsApp } from '../lib/whatsapp';
 
 export default function ContactPage() {
+  const settings = useSettings();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [eventType, setEventType] = useState('Wedding / Reception');
+  const [eventType, setEventType] = useState(EVENT_CATEGORIES[0].title);
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState({ message: '', type: 'success' });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
-    setToastMessage('Thank you! Your VIP concierge request has been sent.');
+    setSubmitting(true);
+    try {
+      await api.submitInquiry({
+        source: 'contact',
+        name,
+        email,
+        phone,
+        event_type: eventType,
+        message,
+      });
+      setSubmitted(true);
+      setToast({ message: 'Thank you! Your message has been sent.', type: 'success' });
+    } catch (err) {
+      setToast({
+        message: `Could not send your message: ${err.message} You can also reach us on WhatsApp.`,
+        type: 'error',
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleWhatsApp = () => {
-    const text = `Hello Eventify! I would like to contact your concierge regarding a ${eventType}.%0A%0AName: ${name || 'Client'}%0AEmail: ${email}%0APhone: ${phone}%0ADetails: ${message}`;
-    window.open(`https://wa.me/18005553836?text=${text}`, '_blank');
+    openWhatsApp(settings.whatsapp_number, [
+      `Hello Eventify! I would like to ask about a ${eventType}.`,
+      '',
+      `Name: ${name || 'Client'}`,
+      email ? `Email: ${email}` : null,
+      phone ? `Phone: ${phone}` : null,
+      message ? `Details: ${message}` : null,
+    ]);
   };
 
   return (
@@ -71,7 +101,7 @@ export default function ContactPage() {
                   <div>
                     <div style={{ fontWeight: '600', color: 'var(--main-text)' }}>Address</div>
                     <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-                      Kuwait<br />
+                      {settings.address}
                     </div>
                   </div>
                 </div>
@@ -83,22 +113,26 @@ export default function ContactPage() {
                   <div>
                     <div style={{ fontWeight: '600', color: 'var(--main-text)' }}>Direct Phone</div>
                     <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-                      +965 6643 3680<br />
+                      <a href={`tel:${settings.phone.replace(/[^\d+]/g, '')}`} style={{ color: 'inherit' }}>
+                        {settings.phone}
+                      </a>
                     </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                  <div style={{ padding: '0.75rem', borderRadius: '50%', background: 'rgba(191, 135, 78, 0.15)', color: 'var(--gold-accent)' }}>
-                    <Mail size={20} />
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: '600', color: 'var(--main-text)' }}>Email Inquiries</div>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-                      concierge@eventify.com<br />
+                {settings.email && (
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <div style={{ padding: '0.75rem', borderRadius: '50%', background: 'rgba(191, 135, 78, 0.15)', color: 'var(--gold-accent)' }}>
+                      <Mail size={20} />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: '600', color: 'var(--main-text)' }}>Email Inquiries</div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
+                        <a href={`mailto:${settings.email}`} style={{ color: 'inherit' }}>{settings.email}</a>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                   <div style={{ padding: '0.75rem', borderRadius: '50%', background: 'rgba(214, 45, 112, 0.15)', color: 'var(--button-highlight)' }}>
@@ -146,7 +180,7 @@ export default function ContactPage() {
                   Thank You, {name}!
                 </h4>
                 <p style={{ color: 'var(--main-text)', fontSize: '0.95rem', lineHeight: '1.7' }}>
-                  Your inquiry has been routed directly to our senior event director. We will be in touch shortly.
+                  Your message has reached our team. We will be in touch shortly.
                 </p>
               </div>
             ) : (
@@ -163,7 +197,7 @@ export default function ContactPage() {
                   />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                   <div>
                     <label className="form-label">Email Address *</label>
                     <input
@@ -181,7 +215,8 @@ export default function ContactPage() {
                       type="tel"
                       required
                       className="form-input"
-                      placeholder="+(695) 0000-0000"
+                      autoComplete="tel"
+                      placeholder="+965 0000 0000"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                     />
@@ -195,14 +230,11 @@ export default function ContactPage() {
                     value={eventType}
                     onChange={(e) => setEventType(e.target.value)}
                   >
-                    <option value="Wedding / Reception">Wedding / Reception</option>
-                    <option value="Milestone Birthday">Milestone Birthday</option>
-                    <option value="Anniversary Gala">Anniversary Gala</option>
-                    <option value="VIP Private Dinner">VIP Private Dinner</option>
-                    <option value="Engagement Soirée">Engagement Soirée</option>
-                    <option value="Baby Shower">Baby Shower</option>
-                    <option value="Custom Themed Production">Custom Themed Production</option>
-                    <option value="Corporate Summit / Gala">Corporate Summit / Gala</option>
+                    {EVENT_CATEGORIES.map((category) => (
+                      <option key={category.id} value={category.title}>
+                        {category.title}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -217,9 +249,9 @@ export default function ContactPage() {
                   />
                 </div>
 
-                <button type="submit" className="btn btn-primary btn-lg" style={{ marginTop: '0.75rem' }}>
+                <button type="submit" className="btn btn-primary btn-lg" style={{ marginTop: '0.75rem' }} disabled={submitting}>
                   <Send size={18} />
-                  <span>Send Contact Request</span>
+                  <span>{submitting ? 'Sending...' : 'Send Contact Request'}</span>
                 </button>
               </form>
             )}
@@ -227,7 +259,7 @@ export default function ContactPage() {
         </div>
       </div>
 
-      <Toast message={toastMessage} onClose={() => setToastMessage('')} />
+      <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: '', type: 'success' })} />
 
       <style>{`
         @media (max-width: 880px) {

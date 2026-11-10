@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { Shield, Lock, User, ArrowRight, Sparkles, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export default function AdminLoginPage() {
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -21,11 +21,19 @@ export default function AdminLoginPage() {
       await login(username, password);
       navigate('/admin/dashboard');
     } catch (err) {
-      setError('Invalid credentials');
+      setError(
+        err.status === 401
+          ? 'Invalid username or password'
+          : err.message || 'Login failed. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
   };
+
+  if (isAuthenticated) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
 
   return (
     <div
@@ -110,8 +118,9 @@ export default function AdminLoginPage() {
               <input
                 type="text"
                 required
+                autoComplete="username"
                 className="form-input"
-                placeholder="e.g. admin"
+                placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 style={{ paddingLeft: '2.5rem' }}
@@ -129,6 +138,7 @@ export default function AdminLoginPage() {
             <div style={{ position: 'relative' }}>
               <input
                 type="password"
+                autoComplete="current-password"
                 required
                 className="form-input"
                 placeholder="••••••••"

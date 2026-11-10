@@ -29,23 +29,23 @@ const getServiceImage = (service) => {
   const name = (service.name || '').toLowerCase();
 
   if (name.includes('sound') || name.includes('dj')) {
-    return '/assets/services/dj%20and%20sound%20system.png';
+    return '/assets/services/dj%20and%20sound%20system.webp';
   }
 
   if (name.includes('light')) {
-    return '/assets/services/event%20lighting.png';
+    return '/assets/services/event%20lighting.webp';
   }
 
   if (name.includes('backdrop') || name.includes('stage')) {
-    return '/assets/services/decor%20and%20backdrop.png';
+    return '/assets/services/decor%20and%20backdrop.webp';
   }
 
   if (name.includes('decor') || name.includes('theme')) {
-    return '/assets/services/custom%20theme%20decor.png';
+    return '/assets/services/custom%20theme%20decor.webp';
   }
 
   if (name.includes('host') || name.includes('mc')) {
-    return '/assets/services/host_mc.png';
+    return '/assets/services/host_mc.webp';
   }
 
   if (
@@ -53,18 +53,18 @@ const getServiceImage = (service) => {
     name.includes('screen') ||
     name.includes('display')
   ) {
-    return '/assets/services/led%20display.png';
+    return '/assets/services/led%20display.webp';
   }
 
   if (name.includes('photo')) {
-    return '/assets/services/photography.png';
+    return '/assets/services/photography.webp';
   }
 
   if (name.includes('video') || name.includes('film')) {
-    return '/assets/services/videography.png';
+    return '/assets/services/videography.webp';
   }
 
-  return '/assets/services/custom%20theme%20decor.png';
+  return '/assets/services/custom%20theme%20decor.webp';
 };
 
   return (
@@ -115,6 +115,7 @@ const getServiceImage = (service) => {
                   <img
                     src={imgUrl}
                     alt={service.name}
+                    loading="lazy"
                     style={{
                       width: '100%',
                       height: '100%',

@@ -1,17 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, ArrowRight, ShieldCheck, Star, Award, Calendar } from 'lucide-react';
+import { useSettings } from '../../context/SettingsContext';
+
+// "Elevate Every Moment. We Create Experiences." -> the last sentence is
+// highlighted on its own line.
+function splitHeadline(headline) {
+  const sentences = (headline || '').match(/[^.!?]+[.!?]*/g)?.map((s) => s.trim()).filter(Boolean) ?? [];
+  if (sentences.length < 2) return { lead: '', highlight: headline };
+  return { lead: sentences.slice(0, -1).join(' '), highlight: sentences[sentences.length - 1] };
+}
 
 const HERO_IMAGES = [
-  '/assets/banners/main.png',
-  '/assets/banners/1.png',
-  '/assets/banners/2.png',
-  '/assets/banners/3.png',
-  '/assets/banners/6.png',
+  '/assets/banners/main.webp',
+  '/assets/banners/1.webp',
+  '/assets/banners/2.webp',
+  '/assets/banners/3.webp',
+  '/assets/banners/6.webp',
 ];
 
 export default function Hero() {
   const [currentIdx, setCurrentIdx] = useState(0);
+  const settings = useSettings();
+  const { lead, highlight } = splitHeadline(settings.hero_headline);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -88,8 +99,12 @@ export default function Hero() {
             textTransform: 'uppercase',
           }}
         >
-          ELEVATE EVERY MOMENT. <br />
-          <span className="text-pink-gradient">WE CREATE EXPERIENCES.</span>
+          {lead && (
+            <>
+              {lead} <br />
+            </>
+          )}
+          <span className="text-pink-gradient">{highlight}</span>
         </h1>
 
         {/* Subtitle */}
@@ -104,7 +119,7 @@ export default function Hero() {
             fontWeight: 300,
           }}
         >
-          From grand fairytale weddings and high-profile corporate galas to exclusive VIP parties, we blend breathtaking floral decor, concert-grade sound, intelligent lighting, and seamless production.
+          {settings.hero_subheadline}
         </p>
 
         {/* Action CTAs */}

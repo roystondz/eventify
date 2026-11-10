@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Search, Package, Sparkles, Check, X, Tag } from 'lucide-react';
-import { api, DEFAULT_PACKAGES } from '../../services/api';
+import { Plus, Edit2, Trash2, Search, Package, Sparkles, Check, X, Tag, RefreshCw } from 'lucide-react';
+import { api } from '../../services/api';
+import { formatItemPrice, parseItems } from '../../lib/quote';
 import Modal from '../../components/common/Modal';
 import Toast from '../../components/common/Toast';
 
@@ -19,16 +20,22 @@ export default function AdminPackagesPage() {
     savings: '',
     items: [''],
   });
-  const [toastMessage, setToastMessage] = useState('');
+  const [toast, setToast] = useState({ message: '', type: 'success' });
+  const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  // Service names, suggested when typing inclusions. Inclusions that match a
+  // service name exactly count as "included" in the event builder.
+  const [serviceNames, setServiceNames] = useState([]);
+
+  const notify = (message, type = 'success') => setToast({ message, type });
 
   const loadPackages = async () => {
     setLoading(true);
+    setLoadError('');
     try {
-      const data = await api.getPackages();
-      setPackages(data);
-    } catch (e) {
-      console.error(e);
-      setPackages(DEFAULT_PACKAGES);
+      setPackages(await api.admin.packages.list());
+    } catch (err) {
+      setLoadError(err.message);
     } finally {
       setLoading(false);
     }
@@ -36,20 +43,11 @@ export default function AdminPackagesPage() {
 
   useEffect(() => {
     loadPackages();
+    api.admin.services
+      .list()
+      .then((services) => setServiceNames(services.map((service) => service.name)))
+      .catch(() => {});
   }, []);
-
-  const parseItems = (raw) => {
-    if (Array.isArray(raw)) return raw;
-    if (typeof raw === 'string') {
-      try {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) return parsed;
-      } catch (e) {
-        return raw.split('\n').filter(Boolean);
-      }
-    }
-    return [];
-  };
 
   const handleOpenAdd = () => {
     setEditingPackage(null);
@@ -58,7 +56,7 @@ export default function AdminPackagesPage() {
       description: '',
       price: '',
       savings: '',
-      items: ['Full Event Staging & Floral Decor', 'Pro Sound & Audio Engineering', 'Intelligent Lighting Setup'],
+      items: [''],
     });
     setIsModalOpen(true);
   };
@@ -90,16 +88,14 @@ export default function AdminPackagesPage() {
     setFormData({ ...formData, items: formData.items.filter((_, i) => i !== idx) });
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this package?')) return;
+  const handleDelete = async (pkg) => {
+    if (!window.confirm(`Delete "${pkg.name}"? This cannot be undone.`)) return;
     try {
-      await api.deletePackage(id);
-      setToastMessage('Package removed');
-      setPackages(packages.filter((p) => p.id !== id));
+      await api.admin.packages.remove(pkg.id);
+      setPackages((current) => current.filter((p) => p.id !== pkg.id));
+      notify('Package deleted');
     } catch (err) {
-      console.warn('API error, updating local state:', err);
-      setPackages(packages.filter((p) => p.id !== id));
-      setToastMessage('Package removed');
+      notify(`Could not delete: ${err.message}`, 'error');
     }
   };
 
@@ -111,28 +107,24 @@ export default function AdminPackagesPage() {
       description: formData.description,
       price: parseFloat(formData.price) || 0,
       savings: formData.savings,
-      items: JSON.stringify(cleanItems),
+      items: cleanItems,
     };
 
+    setSaving(true);
     try {
       if (editingPackage) {
-        await api.updatePackage(editingPackage.id, payload);
-        setToastMessage('Package updated successfully!');
+        await api.admin.packages.update(editingPackage.id, payload);
+        notify('Package updated');
       } else {
-        await api.createPackage(payload);
-        setToastMessage('New package created successfully!');
+        await api.admin.packages.create(payload);
+        notify('Package created');
       }
       setIsModalOpen(false);
       loadPackages();
     } catch (err) {
-      console.warn('API error, updating local state:', err);
-      if (editingPackage) {
-        setPackages(packages.map(p => p.id === editingPackage.id ? { ...p, ...payload } : p));
-      } else {
-        setPackages([...packages, { id: Date.now(), ...payload }]);
-      }
-      setToastMessage('Package saved');
-      setIsModalOpen(false);
+      notify(`Could not save: ${err.message}`, 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -183,7 +175,7 @@ export default function AdminPackagesPage() {
               <th>Package Name</th>
               <th>Description & Savings</th>
               <th>Inclusions</th>
-              <th>Price (KD)</th>
+              <th>Price</th>
               <th style={{ textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
@@ -192,6 +184,18 @@ export default function AdminPackagesPage() {
               <tr>
                 <td colSpan={5} style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
                   Loading packages...
+                </td>
+              </tr>
+            ) : loadError ? (
+              <tr>
+                <td colSpan={5} style={{ textAlign: 'center', padding: '2.5rem' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <span style={{ color: '#FFA5C9' }}>Could not load packages: {loadError}</span>
+                    <button onClick={loadPackages} className="btn btn-outline btn-sm">
+                      <RefreshCw size={14} />
+                      <span>Retry</span>
+                    </button>
+                  </span>
                 </td>
               </tr>
             ) : filteredPackages.length === 0 ? (
@@ -223,7 +227,7 @@ export default function AdminPackagesPage() {
                       </span>
                     </td>
                     <td style={{ fontWeight: '700', color: '#FFF', fontSize: '1.05rem' }}>
-                      KD{Number(pkg.price).toLocaleString()}
+                      {formatItemPrice(pkg)}
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
@@ -243,7 +247,7 @@ export default function AdminPackagesPage() {
                         </button>
 
                         <button
-                          onClick={() => handleDelete(pkg.id)}
+                          onClick={() => handleDelete(pkg)}
                           style={{
                             background: 'rgba(214, 45, 112, 0.15)',
                             border: '1px solid var(--border-pink)',
@@ -292,7 +296,8 @@ export default function AdminPackagesPage() {
               <label className="form-label">Package Price (KD) *</label>
               <input
                 type="number"
-                step="0.01"
+                step="0.001"
+                min="0"
                 required
                 placeholder="e.g. 8500"
                 className="form-input"
@@ -347,6 +352,15 @@ export default function AdminPackagesPage() {
               </button>
             </div>
 
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', margin: '0 0 0.6rem' }}>
+              Pick a service name from the suggestions so the event builder knows that service is
+              already included and doesn't charge for it twice.
+            </p>
+            <datalist id="package-service-names">
+              {serviceNames.map((name) => (
+                <option key={name} value={name} />
+              ))}
+            </datalist>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto' }}>
               {formData.items.map((item, idx) => (
                 <div key={idx} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -354,6 +368,7 @@ export default function AdminPackagesPage() {
                     type="text"
                     className="form-input"
                     placeholder={"Inclusion #" + (idx + 1)}
+                    list="package-service-names"
                     value={item}
                     onChange={(e) => handleItemChange(idx, e.target.value)}
                     style={{ fontSize: '0.88rem', padding: '0.6rem 0.8rem' }}
@@ -361,6 +376,7 @@ export default function AdminPackagesPage() {
                   {formData.items.length > 1 && (
                     <button
                       type="button"
+                      aria-label="Remove inclusion"
                       onClick={() => handleRemoveItem(idx)}
                       style={{
                         background: 'rgba(255, 255, 255, 0.05)',
@@ -380,9 +396,9 @@ export default function AdminPackagesPage() {
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-            <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+            <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={saving}>
               <Check size={16} />
-              <span>{editingPackage ? 'Save Package' : 'Create Package'}</span>
+              <span>{saving ? 'Saving...' : editingPackage ? 'Save Package' : 'Create Package'}</span>
             </button>
             <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-outline">
               Cancel
@@ -391,7 +407,7 @@ export default function AdminPackagesPage() {
         </form>
       </Modal>
 
-      <Toast message={toastMessage} onClose={() => setToastMessage('')} />
+      <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: '', type: 'success' })} />
     </div>
   );
 }

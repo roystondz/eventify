@@ -15,6 +15,9 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Decorative glows are wider than phone screens; without this on html,
+     mobile browsers widen the whole page to fit them. */
+  overflow-x: clip;
 }
 
 body {
@@ -22,7 +25,7 @@ body {
   background-color: var(--bg-dark);
   color: var(--main-text);
   line-height: 1.6;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Custom Luxury Scrollbar */

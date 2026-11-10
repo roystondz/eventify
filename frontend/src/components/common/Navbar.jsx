@@ -51,7 +51,7 @@ export default function Navbar() {
         {/* Brand Logo */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
           <img
-            src="/assets/brand/logo-full.png"
+            src="/assets/brand/logo-full.webp"
             alt="Eventify"
             style={{ height: '38px', width: 'auto', objectFit: 'contain' }}
             onError={(e) => {

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Check, Sparkles, ArrowRight, Tag, Info } from 'lucide-react';
 import { api } from '../../services/api';
 import Modal from '../common/Modal';
+import { parseItems } from '../../lib/quote';
 
 export default function FeaturedPackages({ limit = null }) {
   const [packages, setPackages] = useState([]);
@@ -23,19 +24,6 @@ export default function FeaturedPackages({ limit = null }) {
   }, []);
 
   const displayPackages = limit ? packages.slice(0, limit) : packages;
-
-  const parseItems = (items) => {
-    if (Array.isArray(items)) return items;
-    if (typeof items === 'string') {
-      try {
-        const parsed = JSON.parse(items);
-        if (Array.isArray(parsed)) return parsed;
-      } catch (e) {
-        return items.split('\n').filter(Boolean);
-      }
-    }
-    return [];
-  };
 
   return (
     <section className="section" style={{ position: 'relative' }}>
